@@ -1,5 +1,7 @@
 import { useEffect, useState } from "react";
 import { useParams, Link } from "react-router-dom";
+import { collection, getDocs, query, where } from "firebase/firestore";
+import { db } from "./firebase/config";
 
 function ItemListContainer({ greeting }) {
   const { categoryId } = useParams();
@@ -11,47 +13,34 @@ function ItemListContainer({ greeting }) {
     setLoading(true);
     setError404(false);
 
-    if (categoryId) {
-      fetch(`https://dummyjson.com/products/category/${categoryId}`)
-        .then((res) => {
-          if (!res.ok) throw new Error("Categoría no encontrada");
-          return res.json();
-        })
-        .then((data) => {
-          setProducts(data.products || []);
-          setLoading(false);
-        })
-        .catch(() => {
-          setError404(true);
-          setLoading(false);
-        });
-    } else {
-      const categories = [
-        "laptops",
-        "smartphones",
-        "mens-watches",
-        "lighting",
-        "furniture",
-        "home-decoration",
-      ];
+    const itemsRef = collection(db, "items");
 
-      Promise.all(
-        categories.map((cat) =>
-          fetch(`https://dummyjson.com/products/category/${cat}`).then((res) =>
-            res.json()
-          )
-        )
-      )
-        .then((data) => {
-          const allProducts = data.flatMap((d) => d.products);
-          setProducts(allProducts);
-          setLoading(false);
-        })
-        .catch(() => {
+    let q = itemsRef;
+
+    if (categoryId) {
+      q = query(itemsRef, where("category", "==", categoryId));
+    }
+
+    getDocs(q)
+      .then((snapshot) => {
+        if (snapshot.empty) {
           setError404(true);
           setLoading(false);
-        });
-    }
+          return;
+        }
+
+        const fetchedProducts = snapshot.docs.map((doc) => ({
+          id: doc.id,
+          ...doc.data(),
+        }));
+
+        setProducts(fetchedProducts);
+        setLoading(false);
+      })
+      .catch(() => {
+        setError404(true);
+        setLoading(false);
+      });
   }, [categoryId]);
 
   if (loading)
@@ -70,11 +59,15 @@ function ItemListContainer({ greeting }) {
 
   return (
     <div style={{ marginTop: "100px", textAlign: "center" }}>
+      {/* 🔥 Ahora SÍ estás usando el greeting que te pidió tu profe */}
+      <h1 style={{ marginBottom: "15px" }}>{greeting}</h1>
+
       <h2>
-          {categoryId
-            ? `Catálogo ${categoryId.charAt(0).toUpperCase() + categoryId.slice(1)}`
-            : "Catálogo General"}
+        {categoryId
+          ? `Catálogo ${categoryId.charAt(0).toUpperCase() + categoryId.slice(1)}`
+          : "Catálogo General"}
       </h2>
+
       <div
         style={{
           display: "grid",
@@ -102,8 +95,8 @@ function ItemListContainer({ greeting }) {
             }
           >
             <img
-              src={product.thumbnail}
-              alt={product.title}
+              src={product.image}
+              alt={product.name}
               style={{
                 width: "100%",
                 height: "180px",
@@ -111,13 +104,13 @@ function ItemListContainer({ greeting }) {
                 borderRadius: "8px",
               }}
             />
-            <h4 style={{ marginTop: "10px" }}>{product.title}</h4>
-            <p style={{ color: "#aaa" }}>{product.brand}</p>
+
+            <h4 style={{ marginTop: "10px" }}>{product.name}</h4>
+
             <p style={{ fontWeight: "bold", color: "#00ff99" }}>
               ${product.price}
             </p>
 
-            {/* 👇 Botón para ver detalle */}
             <Link
               to={`/item/${product.id}`}
               style={{
