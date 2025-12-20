@@ -17,7 +17,7 @@ function Navbar() {
         zIndex: 1000,
       }}
     >
-      {/* Aca tenemos el Logo */}
+      {/* Logo */}
       <Link
         to="/"
         style={{
@@ -26,13 +26,13 @@ function Navbar() {
           fontSize: "1.6rem",
           fontWeight: "bold",
           letterSpacing: "1px",
-          marginRight: "60px", 
+          marginRight: "60px",
         }}
       >
         ZonaGaming
       </Link>
 
-      {/* Aca tenemos las Categorías */}
+      {/* Categorías */}
       <div
         style={{
           display: "flex",
@@ -43,14 +43,14 @@ function Navbar() {
       >
         <NavLink to="/category/laptops">Laptops</NavLink>
         <NavLink to="/category/smartphones">Smartphones</NavLink>
-        <NavLink to="/category/mens-watches">Accesorios</NavLink>
-        <NavLink to="/category/lighting">Iluminación RGB</NavLink>
-        <NavLink to="/category/furniture">Setup Gamer</NavLink>
-        <NavLink to="/category/home-decoration">Decoración</NavLink>
+        <NavLink to="/category/accesorios">Accesorios</NavLink>
+        <NavLink to="/category/rgb">Iluminación RGB</NavLink>
+        <NavLink to="/category/setup">Setup Gamer</NavLink>
+        <NavLink to="/category/decoracion">Decoración</NavLink>
       </div>
 
-      {/* Aca tenemos el Carrito */}
-      <div style={{ marginLeft: "40px" }}> 
+      {/* Carrito */}
+      <div style={{ marginLeft: "40px" }}>
         <CartWidget />
       </div>
     </nav>

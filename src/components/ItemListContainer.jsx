@@ -1,30 +1,34 @@
 import { useEffect, useState } from "react";
 import { useParams, Link } from "react-router-dom";
 import { collection, getDocs, query, where } from "firebase/firestore";
-import { db } from "./firebase/config";
+import { db } from "../firebase/config";
 
 function ItemListContainer({ greeting }) {
   const { categoryId } = useParams();
+
   const [products, setProducts] = useState([]);
   const [loading, setLoading] = useState(true);
   const [error404, setError404] = useState(false);
 
   useEffect(() => {
+    // Limpia el estado al cambiar de categoría
+    setProducts([]);
     setLoading(true);
     setError404(false);
 
     const itemsRef = collection(db, "items");
-
-    let q = itemsRef;
+    let q;
 
     if (categoryId) {
       q = query(itemsRef, where("category", "==", categoryId));
+    } else {
+      q = query(itemsRef);
     }
 
     getDocs(q)
       .then((snapshot) => {
         if (snapshot.empty) {
-          setError404(true);
+          setProducts([]);
           setLoading(false);
           return;
         }
@@ -37,36 +41,49 @@ function ItemListContainer({ greeting }) {
         setProducts(fetchedProducts);
         setLoading(false);
       })
-      .catch(() => {
+      .catch((error) => {
+        console.error("Error cargando productos:", error);
         setError404(true);
         setLoading(false);
       });
   }, [categoryId]);
 
-  if (loading)
-    return <p style={{ marginTop: "100px" }}> Cargando productos...</p>;
+  if (loading) {
+    return (
+      <p style={{ marginTop: "100px", textAlign: "center" }}>
+        Cargando productos...
+      </p>
+    );
+  }
 
-  if (error404)
+  if (error404) {
     return (
       <div style={{ textAlign: "center", marginTop: "100px", color: "#ff5555" }}>
-        <h2>⚠️ Categoría no encontrada</h2>
-        <p>La categoría "{categoryId}" no existe o no tiene productos.</p>
+        <h2>⚠️ Error al cargar productos</h2>
         <Link to="/" style={{ color: "#00ff99" }}>
           Volver al catálogo principal
         </Link>
       </div>
     );
+  }
 
   return (
     <div style={{ marginTop: "100px", textAlign: "center" }}>
-      {/* 🔥 Ahora SÍ estás usando el greeting que te pidió tu profe */}
-      <h1 style={{ marginBottom: "15px" }}>{greeting}</h1>
+      {greeting && <h1 style={{ marginBottom: "15px" }}>{greeting}</h1>}
 
       <h2>
         {categoryId
-          ? `Catálogo ${categoryId.charAt(0).toUpperCase() + categoryId.slice(1)}`
+          ? `Catálogo ${
+              categoryId.charAt(0).toUpperCase() + categoryId.slice(1)
+            }`
           : "Catálogo General"}
       </h2>
+
+      {products.length === 0 && (
+        <p style={{ marginTop: "40px", color: "#aaa" }}>
+          No hay productos en esta categoría por el momento.
+        </p>
+      )}
 
       <div
         style={{
@@ -122,14 +139,7 @@ function ItemListContainer({ greeting }) {
                 padding: "6px 12px",
                 borderRadius: "8px",
                 textDecoration: "none",
-                transition: "transform 0.2s",
               }}
-              onMouseEnter={(e) =>
-                (e.currentTarget.style.transform = "scale(1.1)")
-              }
-              onMouseLeave={(e) =>
-                (e.currentTarget.style.transform = "scale(1)")
-              }
             >
               Ver Detalle
             </Link>

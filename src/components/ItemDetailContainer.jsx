@@ -1,28 +1,39 @@
 import { useEffect, useState, useContext } from "react";
 import { useParams, Link } from "react-router-dom";
+import { doc, getDoc } from "firebase/firestore";
+import { db } from "../firebase/config";
 import ItemCount from "./ItemCount";
-import { CartContext } from "../context/CartContext"; 
+import { CartContext } from "../context/CartContext";
 
 function ItemDetailContainer() {
   const { itemId } = useParams();
+
   const [product, setProduct] = useState(null);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState(false);
   const [added, setAdded] = useState(false);
 
-  const { addToCart } = useContext(CartContext); // 
+  const { addToCart } = useContext(CartContext);
 
   useEffect(() => {
     setLoading(true);
     setError(false);
 
-    fetch(`https://dummyjson.com/products/${itemId}`)
-      .then((res) => {
-        if (!res.ok) throw new Error("Producto no encontrado");
-        return res.json();
-      })
-      .then((data) => {
-        setProduct(data);
+    const docRef = doc(db, "items", itemId);
+
+    getDoc(docRef)
+      .then((docSnap) => {
+        if (!docSnap.exists()) {
+          setError(true);
+          setLoading(false);
+          return;
+        }
+
+        setProduct({
+          id: docSnap.id,
+          ...docSnap.data(),
+        });
+
         setLoading(false);
       })
       .catch(() => {
@@ -32,7 +43,7 @@ function ItemDetailContainer() {
   }, [itemId]);
 
   if (loading)
-    return <p style={{ marginTop: "100px" }}> Cargando detalle...</p>;
+    return <p style={{ marginTop: "100px" }}>Cargando detalle...</p>;
 
   if (error)
     return (
@@ -45,7 +56,7 @@ function ItemDetailContainer() {
     );
 
   const onAdd = (quantity) => {
-    addToCart(product, quantity); //  Se usa aquí
+    addToCart(product, quantity);
     setAdded(true);
   };
 
@@ -62,8 +73,8 @@ function ItemDetailContainer() {
       }}
     >
       <img
-        src={product.thumbnail}
-        alt={product.title}
+        src={product.image}
+        alt={product.name}
         style={{
           width: "300px",
           borderRadius: "10px",
@@ -72,17 +83,16 @@ function ItemDetailContainer() {
       />
 
       <div style={{ maxWidth: "400px", textAlign: "left" }}>
-        <h2 style={{ color: "#00ff99" }}>{product.title}</h2>
+        <h2 style={{ color: "#00ff99" }}>{product.name}</h2>
+
         <p style={{ color: "#aaa" }}>{product.description}</p>
-        <p style={{ marginTop: "10px", fontWeight: "bold" }}>
-          Marca: {product.brand}
-        </p>
+
         <p style={{ fontSize: "1.5rem", color: "#00ff99" }}>
           ${product.price}
         </p>
 
         {!added ? (
-          <ItemCount initial={1} stock={product.stock || 10} onAdd={onAdd} />
+          <ItemCount initial={1} stock={10} onAdd={onAdd} />
         ) : (
           <div style={{ marginTop: "20px" }}>
             <Link to="/cart" style={{ color: "#00ff99", fontWeight: "bold" }}>
@@ -102,3 +112,4 @@ function ItemDetailContainer() {
 }
 
 export default ItemDetailContainer;
+
