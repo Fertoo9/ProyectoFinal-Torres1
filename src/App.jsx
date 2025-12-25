@@ -3,18 +3,42 @@ import { Routes, Route } from "react-router-dom";
 import Navbar from "./components/Navbar";
 import ItemListContainer from "./components/ItemListContainer";
 import ItemDetailContainer from "./components/ItemDetailContainer";
-import Cart from "./components/Cart"; //  importamos el carrito
+import Cart from "./components/Cart";
 import Footer from "./components/Footer";
+import Checkout from "./components/Checkout";
 
 function App() {
   return (
     <>
       <Navbar />
+
       <Routes>
-        <Route path="/" element={<ItemListContainer greeting="🎮 Bienvenido a ZonaGaming" />} />
-        <Route path="/category/:categoryId" element={<ItemListContainer />} />
-        <Route path="/item/:itemId" element={<ItemDetailContainer />} />
-        <Route path="/cart" element={<Cart />} /> {/*  nueva ruta */}
+        <Route
+          path="/"
+          element={<ItemListContainer greeting="🎮 Bienvenido a ZonaGaming" />}
+        />
+
+        <Route
+          path="/category/:categoryId"
+          element={<ItemListContainer />}
+        />
+
+        <Route
+          path="/item/:itemId"
+          element={<ItemDetailContainer />}
+        />
+
+        <Route
+          path="/cart"
+          element={<Cart />}
+        />
+
+        {/* ✅ RUTA DE CHECKOUT */}
+        <Route
+          path="/checkout"
+          element={<Checkout />}
+        />
+
         <Route
           path="*"
           element={
@@ -24,6 +48,7 @@ function App() {
           }
         />
       </Routes>
+
       <Footer />
     </>
   );
